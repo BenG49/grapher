@@ -10,16 +10,18 @@ import bglib.util.*;
 
 public class Main {
     public static void main(String[] args) {
-        Display d = new Display(1000, 1000, Color.BLACK, "Graph");
+        Engine engine = new Engine(new Display(1000, 1000, Color.BLACK, "Graph"), new Vector2i(0), 50);
 
-        graph(new Equation[] {
-            // (x, c) -> (x+c*100),
-            (x, c) -> (0.5 * (-Math.sqrt(-8 * (2 * Math.PI * c + Math.PI) - 3 * x * x + 2 * Math.PI) - x)),
-            (x, c) -> (0.5 * (x - Math.sqrt(-8 * (2 * Math.PI * c + Math.PI) - 3 * x * x + 2 * Math.PI))),
-            (x, c) -> (0.5 * (Math.sqrt(-8 * (2 * Math.PI * c + Math.PI) - 3 * x * x + 2 * Math.PI) - x)),
-            (x, c) -> (0.5 * (Math.sqrt(-8 * (2 * Math.PI * c + Math.PI) - 3 * x * x + 2 * Math.PI) + x))
-        }, d, new Vector2i(0), 0.1, false);
-        d.draw();
+        engine.graph((x, c) -> (0.5 * (-Math.sqrt(-8 * (2 * Math.PI * c + Math.PI) - 3 * x * x + 2 * Math.PI) - x)),
+                new Range(-6, 5, 1).iterator());
+        engine.graph((x, c) -> (0.5 * (x - Math.sqrt(-8 * (2 * Math.PI * c + Math.PI) - 3 * x * x + 2 * Math.PI))),
+                new Range(-6, 5, 1).iterator());
+        engine.graph((x, c) -> (0.5 * (Math.sqrt(-8 * (2 * Math.PI * c + Math.PI) - 3 * x * x + 2 * Math.PI) - x)),
+                new Range(-6, 5, 1).iterator());
+        engine.graph((x, c) -> (0.5 * (Math.sqrt(-8 * (2 * Math.PI * c + Math.PI) - 3 * x * x + 2 * Math.PI) + x)),
+                new Range(-6, 5, 1).iterator());
+        
+        engine.draw();
     }
 
     public static void graph(Equation[] e, Display d, Vector2i screenPos, double zoom, boolean lineDraw) {
@@ -27,8 +29,6 @@ public class Main {
         final Vector2i SIZE = new Vector2i(d.WIDTH, d.HEIGHT);
         final RectType screenInfo = new RectType(screenPos.asVector2d(), new Vector2d(zoom, 0));
         zoom *= 100;
-
-        // Vector2i prevDraw = Vector2i.ORIGIN;
 
         d.frameAdd(new Line(new Vector2i(plotPoint(Vector2d.ORIGIN, screenInfo, SIZE).x, 0),
                 new Vector2i(plotPoint(Vector2d.ORIGIN, screenInfo, SIZE).x, d.HEIGHT), Color.WHITE, 2));
@@ -55,7 +55,7 @@ public class Main {
         }
 
         for (Equation i : e)
-            Equation.graph(i, new Range(-6, 5, 0.1), screenInfo, d);
+            Equation.graph(i, new Range(-6, 5, 1).iterator(), screenInfo, d);
         
         System.out.println("done");
     }
@@ -70,16 +70,15 @@ public class Main {
     interface Equation {
         public double calculate(double x, double constant);
 
-        static void graph(Equation e, Range constantRange, RectType screenInfo, Display d) {
+        static void graph(Equation e, Iterator<Double> constantValues, RectType screenInfo, Display d) {
             final double INTERVAL = 0.01;
             final boolean RAINBOW = true;
 
             final Vector2i screenPos = screenInfo.getPos().round();
             final double zoom = screenInfo.getSize().x;
 
-            Iterator<Double> it = constantRange.iterator();
-            while(it.hasNext()) {
-                double c = it.next();
+            while(constantValues.hasNext()) {
+                double c = constantValues.next();
 
                 for (double x = -d.WIDTH/2/zoom+screenPos.x; x < d.WIDTH/2/zoom-screenPos.x; x+=INTERVAL) {
                     Vector2d point = new Vector2d(x, e.calculate(x, c));
