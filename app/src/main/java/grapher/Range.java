@@ -7,10 +7,8 @@ class Range implements Iterator<Double> {
     private int currentIndex = 0;
 
 
-    public Range(double min, double max) {
-        this(min, max, 1);
-    }
-
+    public Range() { this(0, 1); }
+    public Range(double min, double max) { this(min, max, 1); }
     public Range(double min, double max, double interval) {
         if (min > max) {
             this.min = max;
@@ -42,10 +40,5 @@ class Range implements Iterator<Double> {
     @Override
     public Double next() {
         return min+interval*currentIndex++;
-    }
-
-    public Iterator<Double> iterator() {
-        currentIndex = 0;
-        return this;
     }
 }
