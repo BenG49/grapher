@@ -5,11 +5,14 @@ import java.util.Iterator;
 
 import bglib.display.Display;
 import bglib.display.shapes.Circle;
+import bglib.display.shapes.Line;
 import bglib.util.*;
 
 public class Main {
     public static void main(String[] args) {
-        Engine engine = new Engine(new Display(1000, 1000, Color.BLACK, "Graph"), new Vector2i(0), 40);
+        Engine engine = new Engine(new Display(1000, 1000, Color.BLACK, "Graph"), new Vector2i(0), 0.5);
+
+        // engine.graph((x, c) -> (x+c), new Range());
 
         engine.graph((x, c) -> (0.5 * (-Math.sqrt(-8 * (2 * Math.PI * c + Math.PI) - 3 * x * x + 2 * Math.PI) - x)),
                 new Range(-6, 5));
@@ -26,36 +29,37 @@ public class Main {
         engine.draw();
     }
 
-    public static Vector2i plotPoint(Vector2d point, RectType screenInfo, Vector2i size) {
-        double zoom = screenInfo.getSize().x;
-        Vector2i screenPos = screenInfo.getPos().round();
-        return new Vector2d(point.x * zoom + size.x / 2 + screenPos.x / 2,
-                size.y - (point.y * zoom + size.y / 2 + screenPos.y / 2)).round();
-    }
-
     interface Equation {
         public double calculate(double x, double constant);
 
         static void graph(Equation e, Iterator<Double> constantValues, RectType screenInfo, Display d) {
-            final double INTERVAL = 0.005;
+            final double INTERVAL = 0.01;
             final boolean RAINBOW = true;
+            final boolean USELINE = false;
 
-            final Vector2i screenPos = screenInfo.getPos().round();
             final double zoom = screenInfo.getSize().x;
+            final Vector2i screenPos = screenInfo.getPos().round();
+            final Vector2d xMinMax = new Vector2d(
+                -d.WIDTH/2/zoom+screenPos.x,
+                 d.WIDTH/2/zoom-screenPos.x
+            );
 
             while(constantValues.hasNext()) {
                 double c = constantValues.next();
+                Vector2d prevPoint = Vector2d.ORIGIN;
 
-                for (double x = -d.WIDTH/2/zoom+screenPos.x; x < d.WIDTH/2/zoom-screenPos.x; x+=INTERVAL) {
+                for (double x = xMinMax.x; x < xMinMax.y; x+=INTERVAL) {
                     Vector2d point = new Vector2d(x, e.calculate(x, c));
+                    Color color = (RAINBOW)?
+                        Color.getHSBColor((float)(Math.atan2(point.y, point.x)/(Math.PI*2)), 1f, 1f):
+                        Color.WHITE;
                 
-                    d.frameAdd(
-                        new Circle(plotPoint(point, screenInfo, new Vector2i(d.WIDTH, d.HEIGHT)),
-                        2, 
-                        (RAINBOW)?
-                            Color.getHSBColor((float)(Math.atan2(point.y, point.x)/(Math.PI*2)), 1f, 1f):
-                            Color.WHITE
-                    ));
+                    if (USELINE) {
+                        if (x > xMinMax.x)
+                            d.frameAdd(new Line(prevPoint, point, color, 2));
+                        prevPoint = point;
+                    } else
+                        d.frameAdd(new Circle(point, 2, color));
                 }
             }
         }

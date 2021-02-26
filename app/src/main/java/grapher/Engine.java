@@ -5,6 +5,7 @@ import java.awt.Color;
 
 import bglib.display.Display;
 import bglib.display.shapes.*;
+import bglib.display.shapes.Shape.Conversion;
 import bglib.util.*;
 import grapher.Main.Equation;
 
@@ -25,28 +26,25 @@ public class Engine {
         Equation.graph(e, constantValues, screenInfo, d);
     }
 
-    public void plot(Vector2d point) {
-        final boolean RAINBOW = true;
+    public void plot(Vector2d point, Color color) {
+        final boolean RAINBOW = false;
 
-        d.frameAdd(new Circle(
-            Main.plotPoint(point, screenInfo, new Vector2i(d.WIDTH, d.HEIGHT)),
-            5,
-            (RAINBOW)?
-                Color.getHSBColor((float)(Math.atan2(point.y, point.x)/(Math.PI*2)), 1f, 1f):
-                Color.WHITE
+        d.frameAdd(new Circle(point, 5,(RAINBOW)?
+            Color.getHSBColor((float)(Math.atan2(point.y, point.x)/(Math.PI*2)), 1f, 1f):
+            color
         ));
     }
 
     public void draw() {
         final double MARK_LEN = 0.1;
-        final Vector2i SIZE = new Vector2i(d.WIDTH, d.HEIGHT);
-        final RectType screenInfo = new RectType(screenPos.asVector2d(), new Vector2d(zoom, 0));
         zoom *= 100;
 
-        d.frameAdd(new Line(new Vector2i(Main.plotPoint(Vector2d.ORIGIN, screenInfo, SIZE).x, 0),
-                new Vector2i(Main.plotPoint(Vector2d.ORIGIN, screenInfo, SIZE).x, d.HEIGHT), Color.WHITE, 2));
-        d.frameAdd(new Line(new Vector2i(0, Main.plotPoint(Vector2d.ORIGIN, screenInfo, SIZE).y),
-                new Vector2i(d.WIDTH, Main.plotPoint(Vector2d.ORIGIN, screenInfo, SIZE).y), Color.WHITE, 2));
+        d.frameAdd(new Line(
+                new Vector2d(0, screenPos.y-d.HEIGHT/2/zoom),
+                new Vector2d(0, screenPos.y+d.HEIGHT/2/zoom), Color.WHITE, 2));
+        d.frameAdd(new Line(
+                new Vector2d(screenPos.x-d.WIDTH/2/zoom, 0),
+                new Vector2d(screenPos.x+d.WIDTH/2/zoom, 0), Color.WHITE, 2));
 
         for (int i = 0; i < 4; i++) {
             int x = 0, y = 0;
@@ -62,11 +60,12 @@ public class Engine {
                 y = 1;
 
             d.frameAdd(new Line(
-                    Main.plotPoint(new Vector2d((x == 0) ? -MARK_LEN : x, (y == 0) ? -MARK_LEN : y), screenInfo, SIZE),
-                    Main.plotPoint(new Vector2d((x == 0) ? MARK_LEN : x, (y == 0) ? MARK_LEN : y), screenInfo, SIZE),
+                    new Vector2d((x == 0) ? -MARK_LEN : x, (y == 0) ? -MARK_LEN : y),
+                    new Vector2d((x == 0) ? MARK_LEN : x, (y == 0) ? MARK_LEN : y),
                     Color.WHITE, 2));
         }
         
-        d.draw();
+        final Vector2d total = d.getDSize().add(screenPos).div(2);
+        d.draw((pos) -> (pos.mul(zoom).add(total).mul(new Vector2d(1, -1)).addY(d.getDSize().y).round()));
     }
 }
