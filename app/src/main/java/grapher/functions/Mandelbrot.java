@@ -8,14 +8,11 @@ import bglib.util.*;
 
 public class Mandelbrot extends UpdateFunction {
 
-    private HashMap<Complexd, Color> foundPoints;
-
     private static final Color IN_SET_COLOR = Color.BLACK;
 
     public Mandelbrot(Engine engine) {
         super(engine);
 
-        foundPoints = new HashMap<Complexd, Color>();
         engine.toggleAxes(false);
     }
 
@@ -50,11 +47,6 @@ public class Mandelbrot extends UpdateFunction {
                 if (c.getDistance() > 2)
                     continue continueLoop;
 
-                if (foundPoints.containsKey(c)) {
-                    plot(c, foundPoints.get(c), useMirror);
-                    continue continueLoop;
-                }
-
                 if (c.a > -0.5 && c.a < 0.25 && c.b < 0.5 && c.b > -0.5) {
                     plot(c, IN_SET_COLOR, useMirror);
                     continue continueLoop;
@@ -74,17 +66,15 @@ public class Mandelbrot extends UpdateFunction {
                 plot(c, IN_SET_COLOR, useMirror);
             }
         }
-        System.out.println("mandelbrot done");
+
+        engine.draw();
     }
 
     private void plot(Complexd c, Color color, boolean useMirror) {
-        foundPoints.put(c, color);
         engine.plot(new Vector2d(c.a, c.b), color);
 
-        if (useMirror) {
-            foundPoints.put(new Complexd(c.a, -c.b), color);
+        if (useMirror)
             engine.plot(new Vector2d(c.a, -c.b), color);
-        }
     }
     
 }
