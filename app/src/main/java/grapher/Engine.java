@@ -38,7 +38,7 @@ public class Engine {
 
 
     public Vector2d getMousePos() {
-        return d.getMousePos(false);
+        return d.getMousePos();
     }
 
     public Vector2i getDSize() {
